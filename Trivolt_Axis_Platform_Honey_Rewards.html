@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Trivolt Axis Ventures | Circular Platform</title>
+
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""/>
+
+<style>
+:root{--g:#206944;--d:#173f2b;--l:#b9dc76;--bg:#f4f7f1;--ink:#1e2b23;--mut:#6d7b71;--line:#e2e9df}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,Arial;min-height:100vh}
+.app{display:grid;grid-template-columns:235px 1fr;min-height:100vh}
+.side{background:var(--d);color:#fff;padding:22px 15px}
+.brand{display:flex;gap:10px;align-items:center;padding:8px;margin-bottom:28px}
+.mark{background:var(--l);color:var(--d);border-radius:12px;padding:9px 14px;font-size:22px;font-weight:900}
+.brand small{display:block;color:#c6d8c9}
+.nav button{display:block;width:100%;border:0;text-align:left;padding:12px;background:transparent;color:#dce8df;border-radius:9px;margin:4px 0;cursor:pointer;font-size:14px;transition:background 0.2s ease}
+.nav button.active,.nav button:hover{background:#2b5a3d;color:#fff}
+.main{min-width:0}
+.top{background:#fff;border-bottom:1px solid var(--line);padding:17px 28px;display:flex;justify-content:space-between;align-items:center}
+.top small,.eyebrow{color:var(--g);font-size:11px;letter-spacing:1.2px;text-transform:uppercase;font-weight:800}
+.content{max-width:1400px;margin:auto;padding:25px 28px}
+.page{display:none}
+.page.active{display:block}
+h1{font-size:20px;margin:3px 0}
+h2{font-size:27px;margin:5px 0}
+h3{margin:0 0 8px;font-size:16px}
+.muted,p{color:var(--mut)}
+.welcome{display:flex;justify-content:space-between;gap:15px;align-items:center;margin-bottom:20px}
+.btn{background:var(--g);color:white;border:0;border-radius:9px;padding:11px 14px;font-weight:750;cursor:pointer;display:inline-block}
+.btn:hover{opacity:0.95}
+.btn.alt{background:#fff;color:var(--g);border:1px solid #cdddcf}
+.grid{display:grid;gap:15px}
+.stats{grid-template-columns:repeat(4,1fr);margin-bottom:17px}
+.card,.stat{background:#fff;border:1px solid var(--line);border-radius:15px;padding:17px}
+.stat small{color:var(--mut)}
+.stat strong{display:block;font-size:27px;margin:10px 0 0}
+.two{grid-template-columns:1.2fr .8fr}
+.three{grid-template-columns:repeat(3,1fr)}
+.banner{background:linear-gradient(110deg,var(--d),#2e734a);color:white;border-radius:15px;padding:22px;margin-bottom:17px;display:flex;justify-content:space-between;gap:15px;align-items:center}
+.banner p{color:#d5e5d8;max-width:600px}
+.banner .btn{background:var(--l);color:var(--d)}
+.activity{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #edf0eb}
+.activity:last-child{border:0}
+.tag{font-size:11px;background:#edf5e9;color:var(--g);padding:5px 8px;border-radius:30px;white-space:nowrap}
+.tag.pending{background:#fff3d8;color:#8a6410}
+.icon{font-size:25px;margin-bottom:10px}
+.card p{font-size:13px;min-height:36px}
+.toolbar{display:flex;gap:10px;justify-content:space-between;flex-wrap:wrap;margin:17px 0}
+.search,select,input,textarea{padding:10px;border:1px solid #d9e2d7;border-radius:9px;background:white;max-width:100%}
+.tablewrap{overflow:auto;border:1px solid var(--line);border-radius:13px;background:#fff}
+table{border-collapse:collapse;width:100%;min-width:600px}
+td,th{text-align:left;padding:13px 15px;border-bottom:1px solid #edf0eb;font-size:13px}
+th{font-size:11px;color:var(--mut);text-transform:uppercase}
+tr:last-child td{border:0}
+.products{grid-template-columns:repeat(3,1fr)}
+.product-art{height:100px;background:linear-gradient(135deg,#e4f1df,#f6f0d8);border-radius:10px;display:grid;place-items:center;font-size:43px;margin-bottom:12px}
+.price{font-size:20px;color:var(--g);font-weight:850}
+.note{background:#fff8e6;border:1px solid #f0dfb1;color:#72571a;border-radius:10px;padding:12px;margin-top:16px;font-size:12px}
+.modalbg{display:none;position:fixed;inset:0;background:#0c2118aa;align-items:center;justify-content:center;padding:18px;z-index:9999}
+.modalbg.show{display:flex}
+.modal{background:white;padding:23px;border-radius:16px;width:min(500px,100%);max-height:90vh;overflow:auto}
+.field{display:grid;gap:5px;margin:10px 0}
+.field label{font-size:12px;font-weight:750}
+.field input,.field select,.field textarea{width:100%}
+.toast{display:none;position:fixed;bottom:20px;right:20px;background:var(--d);color:white;padding:12px 16px;border-radius:10px;z-index:10000}
+.toast.show{display:block}
+.foot{font-size:11px;color:var(--mut);margin-top:15px}
+
+/* Yango-style Map Wrapper Styling */
+.map-picker-wrapper {
+    position: relative;
+    width: 100%;
+    margin-bottom: 20px;
+}
+#map {
+    height: 400px;
+    width: 100%;
+    border-radius: 13px;
+    border: 1px solid var(--line);
+    z-index: 1;
+}
+.yango-pin {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -100%);
+    z-index: 500;
+    pointer-events: none;
+    font-size: 38px;
+    line-height: 1;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+}
+.location-card {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 500;
+    background: #fff;
+    padding: 10px 18px;
+    border-radius: 30px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    font-size: 13px;
+    max-width: 90%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+@media(max-width:900px){.stats{grid-template-columns:repeat(2,1fr)}.two{grid-template-columns:1fr}.three,.products{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:650px){.app{display:block}.side{padding:12px}.brand{margin-bottom:8px}.nav{display:flex;overflow:auto}.nav button{min-width:max-content;width:auto}.top{padding:13px 15px}.content{padding:18px 14px}.welcome{display:block}.welcome .btn{margin-top:12px}.banner{display:block}.banner .btn{margin-top:10px}.three,.products{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="app">
+<aside class="side">
+  <div class="brand">
+    <div class="mark">T</div>
+    <div><b>TRIVOLT AXIS</b><small>Circular platform</small></div>
+  </div>
+  <nav class="nav" id="nav">
+    <button class="active" data-p="overview">▦ Overview</button>
+    <button data-p="waste">♻ Waste & pickups</button>
+    <button data-p="farmers">♧ Farmers & compost</button>
+    <button data-p="market">🧺 Marketplace & honey</button>
+     <button data-p="rewards">🎁 DOTI rewards</button>
+    <button data-p="services">▣ TAV services</button>
+    <button data-p="orders">⇄ Orders & activity</button>
+    <button data-p="admin">⚙ Operations admin</button>
+  </nav>
+  <p style="color:#c6d8c9;font-size:12px;margin-top:30px">Zambian citizen-owned enterprise<br>Demo mode · Not live · Sample prices only</p>
+</aside>
+
+<main class="main">
+  <header class="top">
+    <div><small>TRIVOLT AXIS VENTURES</small><h1 id="heading">Overview</h1></div>
+    <span class="tag">● Demo workspace</span>
+  </header>
+  
+  <div class="content">
+    <section class="page active" id="overview">
+      <div class="welcome">
+        <div>
+          <div class="eyebrow">Circular economy · Agriculture · Supply</div>
+          <h2>Turn resources into opportunity.</h2>
+          <p>Connect waste collection, compost, farmers, fresh food buyers and TAV's existing supply and logistics services.</p>
+        </div>
+        <button class="btn" data-open="pickup">＋ Request pickup</button>
+      </div>
+      <div class="grid stats">
+        <div class="stat">Waste collected<strong id="wasteStat">1,280 kg</strong><small>Illustrative demo</small></div>
+        <div class="stat">Compost produced<strong>340 kg</strong><small>Illustrative demo</small></div>
+        <div class="stat">Farmers connected<strong id="farmerStat">24</strong><small>Illustrative demo</small></div>
+        <div class="stat">Produce orders<strong id="orderStat">86</strong><small>Illustrative demo</small></div>
+      </div>
+      <div class="banner">
+        <div>
+          <h3>From waste to soil, from soil to food.</h3>
+          <p>Collect suitable organic waste, process it into quality-controlled compost, support farmers and connect their harvests with buyers.</p>
+        </div>
+        <button class="btn" data-p="market">Explore produce →</button>
+      </div>
+      <div class="grid two">
+        <div class="card">
+          <h3>Recent activity</h3>
+          <div id="recent"></div>
+        </div>
+        <div class="card">
+          <h3>Circular impact snapshot</h3>
+          <p>Track waste diverted, compost batches, farmers supported and produce sold.</p>
+          <div class="grid" style="grid-template-columns:repeat(2,1fr)">
+            <div><strong style="font-size:23px;color:var(--g)">1.28 t</strong><small>Waste diverted</small></div>
+            <div><strong style="font-size:23px;color:var(--g)">24</strong><small>Farmers connected</small></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" id="waste">
+      <h2>Waste & pickups</h2>
+      <p>Pan the map to select your collection point seamlessly.</p>
+      
+      <div class="map-picker-wrapper">
+        <div id="map"></div>
+        <div class="yango-pin">📍</div>
+        <div class="location-card">
+          <span>📍</span>
+          <span id="selectedAddress">Move map to set pickup location...</span>
+          <button class="btn" style="padding:4px 10px;font-size:12px" data-open="pickup">Confirm</button>
+        </div>
+      </div>
+
+      <div class="grid three">
+        <div class="card"><div class="icon">🚛</div><h3>Request a collection</h3><p>Instant or scheduled collection from households and markets.</p><button class="btn" data-open="pickup">Request pickup</button></div>
+        <div class="card"><div class="icon">🥬</div><h3>Organic waste</h3><p>Clean food scraps and green waste for composting.</p><button class="btn alt" data-open="waste">Record waste</button></div>
+        <div class="card"><div class="icon">♻️</div><h3>Recyclables recovery</h3><p>Sort plastics, aluminium, and glass.</p></div>
+      </div>
+      
+      <div class="toolbar">
+        <input class="search" id="pickupSearch" placeholder="Search pickups">
+        <button class="btn" data-open="pickup">＋ New pickup</button>
+      </div>
+      
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Reference</th><th>Material</th><th>Type</th><th>Location</th><th>Status</th></tr></thead>
+          <tbody id="pickups"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="page" id="farmers">
+      <h2>Farmers & compost</h2>
+      <p>Connect growers to compost and establish produce supply arrangements.</p>
+      <div class="grid three">
+        <div class="card"><div class="icon">🌾</div><h3>Register a farmer</h3><p>Record farm location and crops.</p><button class="btn" data-open="farmer">Register farmer</button></div>
+        <div class="card"><div class="icon">🌱</div><h3>Compost inventory</h3><p>Track batches and quality checks.</p><button class="btn alt" data-open="compost">Add batch</button></div>
+        <div class="card"><div class="icon">🤝</div><h3>Supply agreement</h3><p>Agree quantity and delivery window.</p><button class="btn alt" data-open="agreement">Create agreement</button></div>
+      </div>
+      <div class="grid two" style="margin-top:16px">
+        <div class="card"><h3>Registered farmers</h3><div id="farmersTable"></div></div>
+        <div class="card"><h3>Compost batches</h3><div id="compostList"></div></div>
+      </div>
+    </section>
+
+    <section class="page" id="market">
+      <h2>Food marketplace</h2>
+      <p>Fresh farm produce listings for households and businesses.</p>
+      <div class="grid products" id="productGrid"></div>
+    </section>
+
+    <section class="page" id="rewards">
+      <h2>DOTI rewards</h2>
+      <p>Earn points for verified waste pickups and accepted sorting. Points may be redeemed for eligible products only when rewards are funded and available.</p>
+      <div class="grid three">
+        <div class="card"><div class="icon">♻️</div><h3>1. Request pickup</h3><p>Schedule an eligible collection through DOTI.</p></div>
+        <div class="card"><div class="icon">⚖️</div><h3>2. Verify collection</h3><p>Record accepted material, quantity and quality.</p></div>
+        <div class="card"><div class="icon">🎁</div><h3>3. Redeem rewards</h3><p>Use eligible points for honey, produce or approved discounts, subject to stock and programme rules.</p></div>
+      </div>
+      <div class="grid two" style="margin-top:16px">
+        <div class="card"><h3>Example rewards</h3>
+          <div class="activity"><span><b>Trivolt Axis Natural Honey · 250 g</b><br><small>Illustrative option</small></span><span class="tag">Points: TBD</span></div>
+          <div class="activity"><span><b>Fresh produce voucher</b><br><small>Eligible listed products</small></span><span class="tag">Points: TBD</span></div>
+          <div class="activity"><span><b>Marketplace discount</b><br><small>Subject to terms and stock</small></span><span class="tag">Points: TBD</span></div>
+        </div>
+        <div class="card"><h3>Programme safeguards</h3><p>Points are not cash and have no guaranteed monetary or utility-bill value. Publish redemption rules, limits and stock availability before launch.</p><button class="btn" data-open="rewardsEnquiry">Register interest</button></div>
+      </div>
+    </section>
+
+    <section class="page" id="services">
+      <h2>Trivolt Axis Ventures services</h2>
+      <p>Alongside the DOTI circular-economy platform, TAV provides procurement, supply, logistics, engineering support, training and institutional supply services as set out in the company profile.</p>
+      <div class="grid three" id="serviceGrid">
+        <div class="card"><div class="icon">📦</div><h3>Procurement & supply</h3><p>Paper materials and products; cleaning equipment and supplies; tools and general machinery; general surgical supply sets and accessories.</p></div>
+        <div class="card"><div class="icon">🛠️</div><h3>Engineering & technical services</h3><p>Transportation engineering; construction machinery and accessories; water treatment and supply equipment.</p></div>
+        <div class="card"><div class="icon">🚚</div><h3>Logistics & transport</h3><p>Transportation components and systems; passenger road transportation; transport operations; transportation equipment supply; storage and logistics services.</p></div>
+        <div class="card"><div class="icon">🎓</div><h3>Training & professional services</h3><p>Procurement and supply chain training to support stronger purchasing and supply-chain practices.</p></div>
+        <div class="card"><div class="icon">🍲</div><h3>Food & institutional supplies</h3><p>Food supply services for institutions and organisations, subject to product availability and contract terms.</p></div>
+        <div class="card"><div class="icon">⛏️</div><h3>Mining-sector supply capability</h3><p>Industrial consumables; cleaning and safety supplies; general tools and machinery; water treatment equipment; logistics and transportation support; institutional food supplies.</p></div>
+        <div class="card"><div class="icon">🏗️</div><h3>Equipment & supply capability</h3><p>Construction tools and machinery; industrial cleaning equipment; transport and logistics equipment; water treatment systems; general procurement supplies; institutional food supply products.</p></div>
+        <div class="card"><div class="icon">♻️</div><h3>DOTI circular services</h3><p>Proposed digital waste pickup, source sorting, recyclable-material recovery, compost pilot and customer rewards.</p><span class="tag">Platform initiative</span></div>
+        <div class="card"><div class="icon">🧺</div><h3>Agriculture & local-products marketplace</h3><p>Proposed farmer produce listings, local-product sales and Trivolt Axis Natural Honey sourced from prospective Kalumbila beekeeper partners.</p><span class="tag">Pilot initiative</span></div>
+      </div>
+      <div class="banner" style="margin-top:16px"><div><h3>Who TAV serves</h3><p>Government ministries and agencies, local authorities, mining companies, construction and engineering firms, NGOs and development organisations, private-sector institutions, and education and health institutions.</p></div><a class="btn" href="mailto:trivoltaxisventures@gmail.com?subject=Trivolt%20Axis%20Services%20Enquiry" style="text-decoration:none">Enquire about services →</a></div>
+      <p class="note">Service descriptions are based on the TAV company profile. Availability, specifications, pricing and delivery schedules are confirmed per enquiry or contract. DOTI, compost, marketplace and honey features are proposed initiatives and are not represented as already contracted or fully operational.</p>
+    </section>
+
+    <section class="page" id="orders">
+      <h2>Orders & activity</h2>
+      <div class="card">
+        <div class="tablewrap" style="margin-top:12px">
+          <table><thead><tr><th>Ref</th><th>Type</th><th>Description</th><th>Status</th></tr></thead><tbody id="activityTable"></tbody></table>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" id="admin">
+      <h2>Operations admin</h2>
+      <p>Prototype overview for dispatch and inventory.</p>
+    </section>
+  </div>
+</main>
+</div>
+
+<div class="modalbg" id="modalbg">
+  <div class="modal">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h3 id="mtitle">New record</h3>
+      <button class="btn alt" id="close">Close</button>
+    </div>
+    <form id="form">
+      <div id="fields"></div>
+      <button class="btn" style="width:100%;margin-top:10px">Save demo record</button>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script>
+const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s);
+
+let pickups=JSON.parse(localStorage.tavPickups||'null')||[{id:'PU-2401',material:'Organic food waste',type:'Scheduled',location:'Roma, Lusaka',status:'Pending'}];
+let farmers=JSON.parse(localStorage.tavFarmers||'null')||[{name:'Green Valley Farm',area:'Chisamba',crops:'Tomatoes, onions',status:'Approved'}];
+let products=JSON.parse(localStorage.tavProducts||'null')||[{name:'Trivolt Axis Natural Honey',category:'Local honey',price:65,unit:'500 g jar · indicative demo price',farm:'Prospective Kalumbila beekeeper partners',emoji:'🍯'},{name:'Fresh tomatoes',category:'Vegetables',price:38,unit:'5 kg crate · illustrative',farm:'Prospective farmer suppliers',emoji:'🍅'},{name:'Seasonal vegetables',category:'Farm produce',price:45,unit:'basket · illustrative',farm:'Prospective farmer suppliers',emoji:'🥬'}];
+let compost=JSON.parse(localStorage.tavCompost||'null')||[{name:'Batch C-001',source:'Food scraps',qty:120,status:'Maturing'}];
+let activity=JSON.parse(localStorage.tavActivity||'null')||[{id:'PU-2401',type:'Waste pickup',desc:'Organic food waste · Roma',status:'Pending'}],enquiries=[];
+
+const serviceLines=[['📦','Procurement & supply','Paper products, cleaning supplies.'],['🚚','Logistics & transport','Transport operations.']];
+let currentSelectedLocation = "Lusaka Central, Zambia";
+
+function esc(x){return String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function save(){localStorage.tavPickups=JSON.stringify(pickups);localStorage.tavFarmers=JSON.stringify(farmers);localStorage.tavProducts=JSON.stringify(products);localStorage.tavCompost=JSON.stringify(compost);localStorage.tavActivity=JSON.stringify(activity);render()}
+function tag(s){return `<span class="tag ${/pending|maturing|draft/i.test(s)?'pending':''}">${esc(s)}</span>`}
+
+let map = null, geocodeTimeout = null;
+
+function initMap() {
+    if (map !== null) {
+        setTimeout(() => map.invalidateSize(), 100);
+        return;
+    }
+    map = L.map('map').setView([-15.3875, 28.3228], 14);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    map.on('moveend', () => {
+        const center = map.getCenter();
+        const addressEl = $('#selectedAddress');
+        if (addressEl) addressEl.textContent = 'Locating address...';
+
+        clearTimeout(geocodeTimeout);
+        geocodeTimeout = setTimeout(() => {
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${center.lat}&lon=${center.lng}`)
+                .then(r => r.json())
+                .then(d => {
+                    const loc = d.display_name ? d.display_name.split(',').slice(0, 3).join(',') : `${center.lat.toFixed(4)}, ${center.lng.toFixed(4)}`;
+                    currentSelectedLocation = loc;
+                    if (addressEl) addressEl.textContent = loc;
+                })
+                .catch(() => {
+                    const fallback = `${center.lat.toFixed(4)}, ${center.lng.toFixed(4)}`;
+                    currentSelectedLocation = fallback;
+                    if (addressEl) addressEl.textContent = fallback;
+                });
+        }, 300);
+    });
+}
+
+function go(p){
+    if(!p) return;
+    $$('.page').forEach(x => x.classList.toggle('active', x.id === p));$$
+('#nav button').forEach(x => x.classList.toggle('active', x.dataset.p === p));
+    if(p === 'waste') initMap();
+    render();
+    window.scrollTo(0,0);
+}
+
+document.addEventListener('click', e => {
+    let pageBtn = e.target.closest('[data-p]');
+    if(pageBtn) { e.preventDefault(); go(pageBtn.dataset.p); return; }
+    let modalBtn = e.target.closest('[data-open]');
+    if(modalBtn) { e.preventDefault(); open(modalBtn.dataset.open); return; }
+});
+
+const defs={
+pickup:['Request waste collection',[['Material','material','select','Organic food waste|Plastic recyclables|Mixed recyclables'],['Collection type','type','select','Instant|Scheduled'],['Location / address','location','text'],['Preferred date','date','date']],d=>{let x={id:'PU-'+Date.now().toString().slice(-6),material:d.material,type:d.type,location:d.location,status:'Pending'};pickups.unshift(x);activity.unshift({id:x.id,type:'Waste pickup',desc:d.material+' · '+d.location,status:'Pending'})}],
+productEnquiry:['Honey / product enquiry',[['Product','product','select','Trivolt Axis Natural Honey 250 g|Trivolt Axis Natural Honey 500 g|Trivolt Axis Natural Honey 1 kg|Other local products'],['Quantity','quantity','select','1|2|5|10|Bulk enquiry'],['Name','name','text'],['Phone or email','contact','text']],d=>{activity.unshift({id:'EN-'+Date.now().toString().slice(-6),type:'Product enquiry',desc:d.product+' · Qty '+d.quantity+' · '+d.contact,status:'Enquiry recorded (demo)'})}],
+rewardsEnquiry:['DOTI rewards interest',[['Name','name','text'],['Phone or email','contact','text'],['Preferred reward','reward','select','Honey|Fresh produce|Marketplace discount']],d=>{activity.unshift({id:'RW-'+Date.now().toString().slice(-6),type:'Rewards interest',desc:d.name+' · '+d.reward+' · '+d.contact,status:'Interest recorded (demo)'})}]
+};
+
+function open(type){
+    let def=defs[type];
+    if(!def) return;
+    $('#mtitle').textContent=def[0];
+    $('#fields').innerHTML=def[1].map(([label,n,t,opts])=>`<div class="field"><label>${label}</label>${t==='select'?`<select name="${n}">${opts.split('|').map(v=>`<option>${v}</option>`).join('')}</select>`:`<input name="${n}" type="${t}">`}</div>`).join('');
+    if(type==='pickup' && $('#fields [name=location]')) $('#fields [name=location]').value = currentSelectedLocation;
+    $('#form').dataset.type=type;
+    $('#modalbg').classList.add('show');
+}
+
+$('#form').onsubmit=e=>{
+    e.preventDefault();
+    let d=Object.fromEntries(new FormData(e.target).entries());
+    defs[e.target.dataset.type][2](d);
+    save();
+    $('#modalbg').classList.remove('show');
+};
+
+$('#close').onclick=()=>$('#modalbg').classList.remove('show');
+
+function render(){
+    if($('#recent')) $('#recent').innerHTML=activity.slice(0,4).map(a=>`<div class="activity"><span><b>${esc(a.desc)}</b></span>${tag(a.status)}</div>`).join('');
+    if($('#pickups')) $('#pickups').innerHTML=pickups.map(p=>`<tr><td>${esc(p.id)}</td><td>${esc(p.material)}</td><td>${esc(p.type)}</td><td>${esc(p.location)}</td><td>${tag(p.status)}</td></tr>`).join('');
+    if($('#activityTable')) $('#activityTable').innerHTML=activity.map(a=>`<tr><td>${esc(a.id)}</td><td>${esc(a.type)}</td><td>${esc(a.desc)}</td><td>${tag(a.status)}</td></tr>`).join('');
+    if($('#productGrid')) $('#productGrid').innerHTML=products.map(p=>`<div class="card"><div class="product-art">${esc(p.emoji||'🧺')}</div><span class="tag">${esc(p.category||'Local product')}</span><h3>${esc(p.name)}</h3><p>${esc(p.farm||'Supplier to be confirmed')}</p><div class="price">K${Number(p.price).toFixed(2)}</div><small>${esc(p.unit||'Indicative listing')}</small><div style="margin-top:12px"><button class="btn" data-open="productEnquiry">Enquire / order</button></div></div>`).join('');
+}
+
+render();
+</script>
+</body>
+</html>
